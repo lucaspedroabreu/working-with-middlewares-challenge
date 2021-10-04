@@ -10,19 +10,68 @@ app.use(cors());
 const users = [];
 
 function checksExistsUserAccount(request, response, next) {
-  // Complete aqui
+  const headerParams = request.headers
+
+  const user = users.find(user => user.username === headerParams.username)
+  if(!user) {
+    return response.status(404).json({error: "user not found"})
+  }
+
+  request.user = user
+  next()
 }
 
 function checksCreateTodosUserAvailability(request, response, next) {
-  // Complete aqui
+  const { user } = request
+
+  if(user.pro === false && user.todos.length === 10) {
+    return response.status(403).json({error: "Free accounts are limited to 10 TODOs"})
+  }
+
+  next()
 }
 
 function checksTodoExists(request, response, next) {
-  // Complete aqui
+  const headerParams = request.headers
+  const routeParams = request.params
+
+  const validUser = users.find(user => user.username === headerParams.username)
+  if(!validUser) {
+    return response.status(404).json({error: "Invalid username"})
+  }
+
+  const validId = validate(routeParams.id)
+  if(!validId) {
+    return response.status(400).json({error: "Not a valid uuid"})
+  }
+
+  const validUserTodo = validUser.todos.find(todo => todo.id === routeParams.id)
+  if (!validUserTodo) {
+    return response.status(404).json({error: "uuid does not match a user TODO"})
+  }
+
+  request.user = validUser
+  request.todo = validUserTodo
+
+  next()
 }
 
 function findUserById(request, response, next) {
-  // Complete aqui
+  const routeParams = request.params
+
+  const validId = validate(routeParams.id)
+  if(!validId) {
+    return response.status(400).json({error: "Not a valid uuid"})
+  }
+
+  const validUser = users.find(user => user.id === routeParams.id)
+  if(!validUser) {
+    return response.status(404).json({error: "Invalid user id"})
+  }
+
+  request.user = validUser
+
+  next()
 }
 
 app.post('/users', (request, response) => {
